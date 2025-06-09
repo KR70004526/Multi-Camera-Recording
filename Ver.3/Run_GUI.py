@@ -7,7 +7,7 @@ import threading
 import time
 import numpy as np
 from pathlib import Path
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QSizePolicy
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
@@ -71,6 +71,10 @@ class MultiCamWindow(QMainWindow):
             lbl = getattr(self.ui, f"CAM_{cid}", None)
             if lbl is not None:
                 self.label_map[cid] = lbl
+        
+        for lbl in self.label_map.values():
+            lbl.setScaledContents(True)
+            lbl.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 
         # 4) Barrier 및 stop_event 생성
         num_cams = len(self.cam_ids)
@@ -159,13 +163,7 @@ class MultiCamWindow(QMainWindow):
             bytes_per_line = ch * w
             img = QImage(rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
             lbl = self.label_map[cam_id]
-            pix = QPixmap.fromImage(
-                img.scaled(
-                    lbl.size(),
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation
-                )
-            )
+            pix = QPixmap.fromImage(img)
             lbl.setPixmap(pix)
 
             # (2) 녹화 중이면 enqueue
