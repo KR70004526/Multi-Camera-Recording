@@ -101,9 +101,19 @@ class MultiCamWindow(QMainWindow):
         self.sync_thread.framesReady.connect(self.update_frames)
         self.sync_thread.start()
 
-        # 7) 상태 표시
-        self.statusBar().showMessage("Ready")
+        self.log_label = getattr(self.ui, "LogLabel", None)
+        if self.log_label:
+            self.log_label.setWordWrap(True)
+            self.log_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            self.log_label.setText("Ready")
 
+    def append_log(self, msg: str):
+        """LogLabel에 메시지를 누적해서 보여줍니다."""
+        if not self.log_label:
+            return
+        prev = self.log_label.text()
+        new_text = f"{prev}\n{msg}" if prev else msg
+        self.log_label.setText(new_text)
 
     def select_directory(self):
         """Load Directory 버튼 클릭 시 호출"""
@@ -111,6 +121,7 @@ class MultiCamWindow(QMainWindow):
         dir_path = QFileDialog.getExistingDirectory(self, "Select Recording Directory", init_dir)
         if dir_path:
             self.ui.Directory.setText(dir_path)
+            self.append_log(f"Directory selected: {dir_path}")
 
 
     def toggle_recording(self, checked: bool):
@@ -138,6 +149,7 @@ class MultiCamWindow(QMainWindow):
             )
             self.recorder.start()
             self.ui.RecordingButton.setText("Stop Recording")
+            self.append_log("Recording started")
         else:
             if not self.recorder:
                 return
@@ -146,7 +158,7 @@ class MultiCamWindow(QMainWindow):
             self.recorder.stop()
             self.recorder = None
             self.ui.RecordingButton.setText("Start Recording")
-
+            self.append_log("Recording stopped")
 
     def update_frames(self, frames):
         """
