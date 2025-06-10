@@ -21,6 +21,12 @@ font.setFamily("Arial")
 font.setPointSize(13)
 font.setWeight(75)
 
+fontLog = QtGui.QFont()
+fontLog.setFamily("Arial")
+fontLog.setPointSize(20)
+fontLog.setBold(True)
+fontLog.setWeight(75)
+
 class Ui_MainWindow(object):
     def setupUi(self, mainWindow):
         mainWindow.setObjectName("mainWindow")
@@ -52,7 +58,7 @@ class Ui_MainWindow(object):
         self.LogLabel.setStyleSheet("Background-color: rgb(255,255,255); border: 1px solid black")
         self.LogLabel.setText("")
         self.LogLabel.setObjectName("LogLabel")
-        self.LogLabel.setFont(fontBold)
+        self.LogLabel.setFont(fontLog)
         self.gridLayout_2.addWidget(self.LogLabel, 1, 1, 1, 1)
         self.CAM_1 = QtWidgets.QLabel(self.Webcam)
         self.CAM_1.setStyleSheet("Background-color: rgb(255,255,255); border: 1px solid black")
