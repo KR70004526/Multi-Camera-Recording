@@ -5,7 +5,7 @@ import sys
 import cv2
 import threading
 import time
-import numpy as np
+import datetime
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QSizePolicy
 from PyQt5.QtGui import QImage, QPixmap
@@ -58,6 +58,9 @@ class MultiCamWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        default_dir = Path("C:/Users/USER/Desktop/Video").resolve()
+        self.ui.Directory.setText(str(default_dir))
+
         # 1) DirectoryButton → 폴더 선택 다이얼로그
         self.ui.DirectoryButton.clicked.connect(self.select_directory)
 
@@ -88,8 +91,8 @@ class MultiCamWindow(QMainWindow):
                 cam_id=cid,
                 barrier=self.barrier,
                 stop_event=self.stop_event,
-                width=1280,
-                height=720,
+                width=1920,
+                height=1080,
                 fps=30
             )
             t.start()
@@ -105,14 +108,19 @@ class MultiCamWindow(QMainWindow):
         if self.log_label:
             self.log_label.setWordWrap(True)
             self.log_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-            self.log_label.setText("Ready")
+            self.log_label.setText("")
+            self.append_log("Ready")
+
+        self.rec_start_time = None
 
     def append_log(self, msg: str):
-        """LogLabel에 메시지를 누적해서 보여줍니다."""
+        """LogLabel에 [날짜-시간] 메시지 형태로 누적 출력합니다."""
         if not self.log_label:
             return
+        now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        entry = f"[{now_str}] {msg}"
         prev = self.log_label.text()
-        new_text = f"{prev}\n{msg}" if prev else msg
+        new_text = f"{prev}\n{entry}" if prev else entry
         self.log_label.setText(new_text)
 
     def select_directory(self):
@@ -135,6 +143,7 @@ class MultiCamWindow(QMainWindow):
             if self.recorder:
                 return
 
+            self.rec_start_time = datetime.datetime.now()
             out_dir = self.ui.Directory.text() or "./videos"
             base_str = self.ui.Name.text() or "session"
 
@@ -159,6 +168,15 @@ class MultiCamWindow(QMainWindow):
             self.recorder = None
             self.ui.RecordingButton.setText("Start Recording")
             self.append_log("Recording stopped")
+            # 녹화 종료 시점과 시작 시점 차이 계산해서 로그로 출력
+            if self.rec_start_time:
+                delta = datetime.datetime.now() - self.rec_start_time
+                secs = int(delta.total_seconds())
+                h = secs // 3600
+                m = (secs % 3600) // 60
+                s = secs % 60
+                dur_str = f"{h:02}:{m:02}:{s:02}"
+                self.append_log(f"Recording duration: {dur_str}")
 
     def update_frames(self, frames):
         """
